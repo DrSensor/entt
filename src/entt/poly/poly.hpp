@@ -67,15 +67,16 @@ class poly_vtable {
     static auto make_vtable(value_list<Candidate...>)
     -> std::tuple<decltype(vtable_entry(Candidate))...>;
 
+    template<typename... Candidate>
+    static auto make_vtable(type_list<Candidate...>)
+    -> std::tuple<decltype(vtable_entry(std::declval<Candidate>()))...>;
+
     template<typename... Func>
     static auto dispatch_vtable(type_list<Func...>)  {
         if constexpr(sizeof...(Func) == 0) {
             return make_vtable(typename Concept::template impl<inspector>{});
         } else {
-            return std::make_tuple([](auto identity) {
-                using type = typename decltype(identity)::type inspector:: *;
-                return vtable_entry(type{});
-            }(type_identity<Func>{})...);
+            return make_vtable(type_list<Func inspector:: *...>{});
         }
     }
 
