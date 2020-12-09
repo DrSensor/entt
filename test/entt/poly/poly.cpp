@@ -13,6 +13,21 @@ struct Deduced {
         void decr() { entt::poly_call<3>(*this); }
         int mul(int v) { return entt::poly_call<4>(*this, v); }
     };
+
+    template<typename Type>
+    static void decr(Type &self) { self.set(self.get()-1); }
+
+    template<typename Type>
+    static double mul(Type &self, double v) { return v * self.get(); }
+
+    template<typename Type>
+    using impl = entt::value_list<
+        &Type::incr,
+        &Type::set,
+        &Type::get,
+        &decr<Type>,
+        &mul<Type>
+    >;
 };
 
 struct Defined: entt::type_list<
@@ -30,27 +45,22 @@ struct Defined: entt::type_list<
         void decr() { entt::poly_call<3>(*this); }
         int mul(int v) { return entt::poly_call<4>(*this, v); }
     };
+
+    template<typename Type>
+    static void decr(Type &self) { self.decrement(); }
+
+    template<typename Type>
+    static double mul(Type &self, double v) { return self.multiply(v); }
+
+    template<typename Type>
+    using impl = entt::value_list<
+        &Type::incr,
+        &Type::set,
+        &Type::get,
+        &decr<Type>,
+        &mul<Type>
+    >;
 };
-
-template<typename Type>
-inline constexpr auto entt::poly_impl<Deduced, Type> =
-    std::make_tuple(
-        &Type::incr,
-        &Type::set,
-        &Type::get,
-        +[](Type &self) { self.set(self.get()-1); },
-        +[](const Type &self, double v) -> double { return v * self.get(); }
-    );
-
-template<typename Type>
-inline constexpr auto entt::poly_impl<Defined, Type> =
-    std::make_tuple(
-        &Type::incr,
-        &Type::set,
-        &Type::get,
-        +[](Type &self) { self.decrement(); },
-        +[](Type &self, double v) -> double { return self.multiply(v); }
-    );
 
 struct impl {
     void incr() { ++value; }
